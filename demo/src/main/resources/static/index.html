@@ -9,28 +9,8 @@
 
 <h1>Tic Tac Toe</h1>
 
-<div id="board">
-    <button onclick="makeMove(0,0)"></button>
-    <button onclick="makeMove(0,1)"></button>
-    <button onclick="makeMove(0,2)"></button>
+<p id="player">Current Player: X</p>
 
-    <button onclick="makeMove(1,0)"></button>
-    <button onclick="makeMove(1,1)"></button>
-    <button onclick="makeMove(1,2)"></button>
-
-    <button onclick="makeMove(2,0)"></button>
-    <button onclick="makeMove(2,1)"></button>
-    <button onclick="makeMove(2,2)"></button>
-</div>
-
-<p id="player"></p>
-
-<script src="script.js"></script>
-</body>
-</html>
-<button onclick="resetGame()" class="restart-btn">
-    Restart Game
-</button>
 <div class="board">
     <div class="cell" data-index="0"></div>
     <div class="cell" data-index="1"></div>
@@ -42,3 +22,11 @@
     <div class="cell" data-index="7"></div>
     <div class="cell" data-index="8"></div>
 </div>
+
+<button onclick="resetGame()" class="restart-btn">
+    Restart Game
+</button>
+
+<script src="script.js"></script>
+</body>
+</html>
