@@ -68,4 +68,17 @@ function updateUI(game) {
 
     playerText.innerText = "Current Player: " + game.currentPlayer;
 }
+function makeMove(cell, row, col) {
+  if (cell.innerText !== "") return;
+
+  fetch(`/move?row=${row}&col=${col}`)
+    .then(res => res.json())
+    .then(game => {
+      cell.innerText = game.board[row][col];
+      cell.classList.add("filled"); // animation
+      renderBoard(game);
+    });
+}
+winningCells.forEach(c => c.classList.add("win"));
+
 

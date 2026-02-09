@@ -17,3 +17,88 @@ button {
     font-size: 32px;
     cursor: pointer;
 }
+/* Page background */
+body {
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Game container */
+.game {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+/* Grid */
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Cell */
+.cell {
+  width: 100px;
+  height: 100px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 14px;
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+/* Hover effect */
+.cell:hover {
+  transform: scale(1.08);
+  background: rgba(255,255,255,0.25);
+}
+
+/* Pop animation when mark appears */
+.cell.filled {
+  animation: pop 0.25s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); }
+  100% { transform: scale(1); }
+}
+.cell.win {
+  background: #00ffcc !important;
+  color: #000;
+  animation: glow 0.8s infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 10px #00ffcc; }
+  to { box-shadow: 0 0 25px #00ffcc; }
+}
+button {
+  margin-top: 15px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: #00ffcc;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+.fade {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
