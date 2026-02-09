@@ -1,8 +1,20 @@
-FROM eclipse-temurin:17-jre
+# BUILD STAGE
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /build
 
+# Copy everything
+COPY . .
+
+# Build the Spring Boot app
+RUN mvn -f demo/pom.xml clean package -DskipTests
+
+
+# RUN STAGE
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-COPY demo/target/*.jar app.jar
+# Copy jar from build stage
+COPY --from=build /build/demo/target/*.jar app.jar
 
 EXPOSE 8080
 
