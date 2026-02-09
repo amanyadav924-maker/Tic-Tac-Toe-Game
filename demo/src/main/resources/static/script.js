@@ -80,5 +80,21 @@ function makeMove(cell, row, col) {
     });
 }
 winningCells.forEach(c => c.classList.add("win"));
+const cells = document.querySelectorAll(".cell");
+let currentPlayer = "X";
+let board = Array(9).fill("");
+
+cells.forEach(cell => {
+  cell.addEventListener("click", () => {
+    const index = cell.dataset.index;
+
+    if (board[index] !== "") return; // prevent overwrite
+
+    board[index] = currentPlayer;
+    cell.textContent = currentPlayer;
+
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+  });
+});
 
 
