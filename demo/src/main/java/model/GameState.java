@@ -5,7 +5,7 @@ public class GameState {
     private char[][] board;
     private char currentPlayer;
 
-    // ✅ Game status
+    // Game status
     private char winner = '\u0000';
     private boolean draw = false;
 
@@ -44,7 +44,7 @@ public class GameState {
         }
     }
 
-    // ✅ Check winner & draw
+    // Check winner & draw
     public void checkGameStatus() {
         char[][] b = board;
 

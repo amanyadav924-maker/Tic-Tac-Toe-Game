@@ -28,7 +28,7 @@ function resetGame() {
         .then(res => res.json())
         .then(updateUI);
 }
-// 🔥 Antigravity effect
+// Antigravity effect
 function enableAntigravity() {
     boardButtons.forEach(btn => {
         btn.style.transition = "transform 1s ease";
@@ -44,7 +44,7 @@ function restartGame() {
         .then(res => res.json())
         .then(game => {
             updateUI(game);
-            enableAntigravity(); // 👈 HERE
+            enableAntigravity(); // HERE
         });
 }
 function updateUI(game) {
