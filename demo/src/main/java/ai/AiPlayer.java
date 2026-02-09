@@ -28,11 +28,11 @@ public class AiPlayer {
             }
         }
 
-        // 🔥 REAL MOVE (only once)
+        //REAL MOVE (only once)
         gameState.makeMove(bestRow, bestCol);
     }
 
-    // ---------- MINIMAX ----------
+    //  MINIMAX 
 
     private int minimax(char[][] board, boolean isMaximizing) {
         char winner = checkWinner(board);
@@ -68,7 +68,7 @@ public class AiPlayer {
         }
     }
 
-    // ---------- HELPERS ----------
+    //  HELPERS
 
     private char checkWinner(char[][] b) {
         for (int i = 0; i < 3; i++) {
