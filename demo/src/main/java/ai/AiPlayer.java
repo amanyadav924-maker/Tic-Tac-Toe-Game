@@ -28,11 +28,6 @@ public class AiPlayer {
             }
         }
 
-<<<<<<< HEAD
-        //REAL MOVE (only once)
-=======
-        // REAL MOVE (only once)
->>>>>>> 030ac88 (Fix Docker CMD and AI logic)
         gameState.makeMove(bestRow, bestCol);
     }
 
