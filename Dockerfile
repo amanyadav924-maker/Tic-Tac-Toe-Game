@@ -1,5 +1,5 @@
 #  BUILD STAGE
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /build
 
 # Copy Maven project
@@ -9,9 +9,8 @@ COPY demo/src demo/src
 # Build the jar
 RUN mvn -f demo/pom.xml clean package -DskipTests
 
-
 #  RUN STAGE
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Copy jar from build stage
