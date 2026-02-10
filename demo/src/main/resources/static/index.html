@@ -2,31 +2,138 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tic Tac Toe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A polished, multi-mode Tic-Tac-Toe game with AI opponents of varying difficulty and a unique Loop Mode.">
+    <title>Tic Tac Toe — Play Smart</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Tic Tac Toe</h1>
+    <!-- ═══════════════════════════════════════════ -->
+    <!--            SETUP FLOW CONTAINER             -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="app-container">
 
-<p id="player">Current Player: X</p>
+        <!-- ── SCREEN 1: Mode Selection ── -->
+        <section id="screen-mode" class="setup-screen active" aria-label="Game Mode Selection">
+            <div class="screen-inner">
+                <div class="logo-area">
+                    <span class="logo-icon">✦</span>
+                    <h1 class="main-title">Tic Tac Toe</h1>
+                </div>
+                <p class="subtitle">Choose a game mode</p>
 
-<div class="board">
-    <div class="cell" data-index="0"></div>
-    <div class="cell" data-index="1"></div>
-    <div class="cell" data-index="2"></div>
-    <div class="cell" data-index="3"></div>
-    <div class="cell" data-index="4"></div>
-    <div class="cell" data-index="5"></div>
-    <div class="cell" data-index="6"></div>
-    <div class="cell" data-index="7"></div>
-    <div class="cell" data-index="8"></div>
-</div>
+                <div class="option-cards" id="mode-options">
+                    <button class="option-card" id="btn-mode-simple" data-value="simple" onclick="selectMode('simple')">
+                        <span class="card-icon">⚡</span>
+                        <span class="card-title">Simple Mode</span>
+                        <span class="card-desc">Classic rules. Quick match.</span>
+                    </button>
+                    <button class="option-card" id="btn-mode-loop" data-value="loop" onclick="selectMode('loop')">
+                        <span class="card-icon">♾️</span>
+                        <span class="card-title">Loop Mode</span>
+                        <span class="card-desc">Infinite play. No draws. Old moves disappear.</span>
+                    </button>
+                </div>
+            </div>
+        </section>
 
-<button onclick="resetGame()" class="restart-btn">
-    Restart Game
-</button>
+        <!-- ── SCREEN 2: Opponent Selection ── -->
+        <section id="screen-opponent" class="setup-screen" aria-label="Opponent Selection">
+            <div class="screen-inner">
+                <button class="back-btn" id="btn-back-to-mode" onclick="goBack('screen-mode')" aria-label="Go back to mode selection">
+                    ← Back
+                </button>
+                <h2 class="screen-title">Choose your opponent</h2>
 
-<script src="script.js"></script>
+                <div class="option-cards" id="opponent-options">
+                    <button class="option-card" id="btn-opp-ai" data-value="ai" onclick="selectOpponent('ai')">
+                        <span class="card-icon">🤖</span>
+                        <span class="card-title">Play vs AI</span>
+                        <span class="card-desc">Test your skills against the machine.</span>
+                    </button>
+                    <button class="option-card" id="btn-opp-human" data-value="human" onclick="selectOpponent('human')">
+                        <span class="card-icon">👥</span>
+                        <span class="card-title">Play vs Human</span>
+                        <span class="card-desc">Play with a friend locally.</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── SCREEN 3: AI Difficulty ── -->
+        <section id="screen-difficulty" class="setup-screen" aria-label="AI Difficulty Selection">
+            <div class="screen-inner">
+                <button class="back-btn" id="btn-back-to-opponent" onclick="goBack('screen-opponent')" aria-label="Go back to opponent selection">
+                    ← Back
+                </button>
+                <h2 class="screen-title">Choose difficulty</h2>
+
+                <div class="option-cards three-cols" id="difficulty-options">
+                    <button class="option-card" id="btn-diff-easy" data-value="easy" onclick="selectDifficulty('easy')">
+                        <span class="card-icon">🌱</span>
+                        <span class="card-title">Easy</span>
+                        <span class="card-desc">Random moves. Great for beginners.</span>
+                    </button>
+                    <button class="option-card" id="btn-diff-medium" data-value="medium" onclick="selectDifficulty('medium')">
+                        <span class="card-icon">⚖️</span>
+                        <span class="card-title">Medium</span>
+                        <span class="card-desc">Mixed logic. A fair challenge.</span>
+                    </button>
+                    <button class="option-card" id="btn-diff-hard" data-value="hard" onclick="selectDifficulty('hard')">
+                        <span class="card-icon">🔥</span>
+                        <span class="card-title">Hard</span>
+                        <span class="card-desc">Unbeatable. Optimal strategy.</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!--              GAME BOARD AREA               -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section id="screen-game" class="game-screen" aria-label="Game Board">
+            <div class="game-inner">
+                <div class="game-header">
+                    <div class="game-info-bar">
+                        <span class="badge" id="badge-mode"></span>
+                        <span class="badge" id="badge-opponent"></span>
+                        <span class="badge" id="badge-difficulty"></span>
+                    </div>
+                    <h2 class="game-status" id="game-status">Player X's turn</h2>
+                </div>
+
+                <div class="board" id="game-board">
+                    <div class="cell" data-index="0" id="cell-0"></div>
+                    <div class="cell" data-index="1" id="cell-1"></div>
+                    <div class="cell" data-index="2" id="cell-2"></div>
+                    <div class="cell" data-index="3" id="cell-3"></div>
+                    <div class="cell" data-index="4" id="cell-4"></div>
+                    <div class="cell" data-index="5" id="cell-5"></div>
+                    <div class="cell" data-index="6" id="cell-6"></div>
+                    <div class="cell" data-index="7" id="cell-7"></div>
+                    <div class="cell" data-index="8" id="cell-8"></div>
+                </div>
+
+                <div class="game-actions">
+                    <button class="action-btn primary" id="btn-restart" onclick="resetGame()">
+                        ↻ Restart
+                    </button>
+                    <button class="action-btn secondary" id="btn-new-game" onclick="backToSetup()">
+                        ✦ New Game
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Ambient floating particles -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <script src="script.js"></script>
 </body>
 </html>
