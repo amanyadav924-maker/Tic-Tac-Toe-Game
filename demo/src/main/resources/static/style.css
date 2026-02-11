@@ -638,3 +638,123 @@ body::before {
     justify-content: center;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   CINEMATIC STARFIELD — Background Animation Layer
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Full-screen Canvas ── */
+#star-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ── Collision Dim Overlay ── */
+#collision-dim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    z-index: 2;
+    pointer-events: none;
+    transition: background 0.4s ease-out;
+}
+
+#collision-dim.active {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Radial Glow Pulse (centered on logo) ── */
+#glow-pulse {
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+            rgba(129, 140, 248, 0.6) 0%,
+            rgba(165, 180, 252, 0.3) 30%,
+            rgba(99, 102, 241, 0.1) 55%,
+            transparent 75%);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    z-index: 3;
+    pointer-events: none;
+    transition: none;
+}
+
+#glow-pulse.burst {
+    animation: glowBurst 0.8s ease-out forwards;
+}
+
+@keyframes glowBurst {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+
+    30% {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(3.5);
+        opacity: 0;
+    }
+}
+
+/* ── UI Dimming During Intro ── */
+#app-container.intro-dimmed {
+    opacity: 0.8;
+    transition: opacity 0.6s ease-out;
+}
+
+#app-container.intro-collision {
+    opacity: 0.5;
+    transition: opacity 0.3s ease-out;
+}
+
+#app-container.intro-reveal {
+    opacity: 1;
+    transition: opacity 0.8s ease-out;
+}
+
+/* ── Logo Impact Glow ── */
+.logo-icon.glow-burst {
+    filter: drop-shadow(0 0 18px rgba(129, 140, 248, 0.9)) drop-shadow(0 0 40px rgba(165, 180, 252, 0.6));
+    transform: scale(1.25) !important;
+    transition: filter 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.logo-icon.glow-settle {
+    filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.5)) drop-shadow(0 0 22px rgba(165, 180, 252, 0.25));
+    transform: scale(1.05) !important;
+    transition: filter 1.0s ease-out, transform 1.0s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REDUCED MOTION — Skip all intro animation
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+    #star-canvas {
+        display: none !important;
+    }
+
+    #collision-dim,
+    #glow-pulse {
+        display: none !important;
+    }
+
+    #app-container.intro-dimmed {
+        opacity: 1 !important;
+    }
+
+    .logo-icon.glow-burst,
+    .logo-icon.glow-settle {
+        filter: none !important;
+        transform: none !important;
+    }
+}

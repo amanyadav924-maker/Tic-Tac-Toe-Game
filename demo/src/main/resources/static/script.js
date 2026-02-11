@@ -1,4 +1,449 @@
 /* ═══════════════════════════════════════════════════════════
+   CINEMATIC STARFIELD — Background Animation Engine
+   Canvas 2D · 60fps · Delta-time · Randomized per refresh
+   ═══════════════════════════════════════════════════════════ */
+
+(function initCinematicStarfield() {
+    'use strict';
+
+    // ── Accessibility: skip entirely if reduced motion preferred ──
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const app = document.getElementById('app-container');
+        if (app) {
+            app.classList.remove('intro-dimmed');
+            app.style.opacity = '1';
+        }
+        return;
+    }
+
+    // ── DOM refs ──
+    const canvas = document.getElementById('star-canvas');
+    const ctx = canvas.getContext('2d');
+    const dimOverlay = document.getElementById('collision-dim');
+    const glowPulse = document.getElementById('glow-pulse');
+    const appContainer = document.getElementById('app-container');
+    const logoIcon = document.querySelector('.logo-icon');
+
+    if (!canvas || !ctx) return;
+
+    // ── Canvas sizing ──
+    let W, H, dpr;
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth;
+        H = window.innerHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ── Easing ──
+    function easeInOutCubic(t) {
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+    }
+
+    // ── Logo center helper ──
+    function getLogoCenter() {
+        if (!logoIcon) return { x: W / 2, y: H / 2 };
+        const rect = logoIcon.getBoundingClientRect();
+        return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  STARFIELD — 200 small twinkling stars
+    // ═══════════════════════════════════════════════════════════
+
+    const STAR_COUNT = 200;
+    const stars = [];
+
+    function createStar(i) {
+        return {
+            x: Math.random() * W,
+            y: Math.random() * H,
+            radius: 0.4 + Math.random() * 1.6,
+            baseAlpha: 0.3 + Math.random() * 0.7,
+            alpha: 0,
+            twinkleSpeed: 0.5 + Math.random() * 2.0,
+            twinkleOffset: Math.random() * Math.PI * 2,
+            // Slight warm/cool color variation for realism
+            hue: 200 + Math.random() * 40,        // 200–240 (blue–lavender range)
+            saturation: 10 + Math.random() * 30,   // subtle
+            lightness: 85 + Math.random() * 15,     // near-white
+            active: true  // will be set false for the chosen breakaway star
+        };
+    }
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push(createStar(i));
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  BREAKAWAY STAR — randomly selected
+    // ═══════════════════════════════════════════════════════════
+
+    // Pick a random star from outer region (at least 25% away from center)
+    const candidateStars = stars.filter(s => {
+        const dx = s.x - W / 2;
+        const dy = s.y - H / 2;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        return dist > Math.min(W, H) * 0.25;
+    });
+    const chosenIndex = Math.floor(Math.random() * candidateStars.length);
+    const chosenStar = candidateStars[chosenIndex] || stars[0];
+
+    // ═══════════════════════════════════════════════════════════
+    //  SHOOTING STAR STATE
+    // ═══════════════════════════════════════════════════════════
+
+    const shootingStar = {
+        active: false,
+        x: chosenStar.x,
+        y: chosenStar.y,
+        startX: chosenStar.x,
+        startY: chosenStar.y,
+        targetX: 0,
+        targetY: 0,
+        progress: 0,       // 0→1 normalized
+        radius: 2.5,
+        trail: [],          // particle trail positions
+        maxTrailLen: 35,
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    //  COLLISION PARTICLES
+    // ═══════════════════════════════════════════════════════════
+
+    const burstParticles = [];
+    function spawnBurstParticles(cx, cy, count) {
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 60 + Math.random() * 180;
+            const life = 0.4 + Math.random() * 0.6;
+            burstParticles.push({
+                x: cx, y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                radius: 1 + Math.random() * 2.5,
+                alpha: 1,
+                life: life,
+                maxLife: life,
+                hue: 220 + Math.random() * 40,
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  ANIMATION PHASES & TIMING
+    // ═══════════════════════════════════════════════════════════
+
+    const PHASE = {
+        TWINKLE: 0,       // 0–1.2s: Stars appear + twinkle
+        DETACH: 1,         // 1.2s: Chosen star pulses & detaches
+        SHOOT: 2,          // 1.5–3.5s: Shooting star flies to logo
+        COLLISION: 3,      // 3.5s: Impact effects
+        REVEAL: 4,         // 3.5–5.5s: UI reveals
+        IDLE: 5,           // 5.5s+: Stars remain, loop continues
+    };
+
+    let currentPhase = PHASE.TWINKLE;
+    const T_DETACH = 1200;       // ms after start
+    const T_SHOOT_START = 1500;
+    const T_SHOOT_DURATION = 2000;
+    const T_COLLISION = T_SHOOT_START + T_SHOOT_DURATION;
+    const T_REVEAL_DURATION = 1500;
+
+    let animFrameId = null;
+    let startTime = performance.now();
+    let lastTime = startTime;
+    let destroyed = false;
+
+    // ═══════════════════════════════════════════════════════════
+    //  RENDER FUNCTIONS
+    // ═══════════════════════════════════════════════════════════
+
+    function drawStar(s) {
+        if (s.alpha <= 0.01) return;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        const color = `hsla(${s.hue}, ${s.saturation}%, ${s.lightness}%, ${s.alpha})`;
+        ctx.fillStyle = color;
+        // Glow for brighter stars
+        if (s.radius > 1.0 && s.alpha > 0.5) {
+            ctx.shadowColor = `hsla(${s.hue}, 60%, 80%, ${s.alpha * 0.4})`;
+            ctx.shadowBlur = s.radius * 3;
+        } else {
+            ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    function drawShootingStar() {
+        if (!shootingStar.active) return;
+
+        const ss = shootingStar;
+
+        // ── Trail ──
+        for (let i = 0; i < ss.trail.length; i++) {
+            const t = ss.trail[i];
+            const fade = i / ss.trail.length;
+            const r = ss.radius * fade * 0.8;
+            if (r < 0.2) continue;
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(165, 180, 252, ${fade * 0.5})`;
+            ctx.fill();
+        }
+
+        // ── Core glow ──
+        const gradient = ctx.createRadialGradient(
+            ss.x, ss.y, 0,
+            ss.x, ss.y, ss.radius * 4
+        );
+        gradient.addColorStop(0, 'rgba(224, 231, 255, 0.95)');
+        gradient.addColorStop(0.3, 'rgba(165, 180, 252, 0.6)');
+        gradient.addColorStop(0.6, 'rgba(129, 140, 248, 0.2)');
+        gradient.addColorStop(1, 'transparent');
+
+        ctx.beginPath();
+        ctx.arc(ss.x, ss.y, ss.radius * 4, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // ── Bright center ──
+        ctx.beginPath();
+        ctx.arc(ss.x, ss.y, ss.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(240, 244, 255, 0.95)';
+        ctx.shadowColor = 'rgba(165, 180, 252, 0.8)';
+        ctx.shadowBlur = 15;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    function drawBurstParticles() {
+        for (const p of burstParticles) {
+            if (p.alpha <= 0.01) continue;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${p.hue}, 80%, 80%, ${p.alpha})`;
+            ctx.shadowColor = `hsla(${p.hue}, 90%, 85%, ${p.alpha * 0.5})`;
+            ctx.shadowBlur = 6;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  MAIN ANIMATION LOOP
+    // ═══════════════════════════════════════════════════════════
+
+    function frame(now) {
+        if (destroyed) return;
+
+        const dt = Math.min((now - lastTime) / 1000, 0.05); // cap at 50ms
+        const elapsed = now - startTime;
+        lastTime = now;
+
+        ctx.clearRect(0, 0, W, H);
+
+        // ── Update & draw stars ──
+        for (const s of stars) {
+            if (!s.active) continue;
+            // Twinkle
+            const twinkle = Math.sin(now * 0.001 * s.twinkleSpeed + s.twinkleOffset);
+            const twinkleAlpha = s.baseAlpha * (0.6 + 0.4 * twinkle);
+
+            // Fade in during first 1.2s
+            if (elapsed < T_DETACH) {
+                const fadeIn = Math.min(elapsed / T_DETACH, 1);
+                s.alpha = twinkleAlpha * easeOutQuart(fadeIn);
+            } else {
+                s.alpha = twinkleAlpha;
+            }
+
+            drawStar(s);
+        }
+
+        // ── Phase: DETACH — Pulse the chosen star before it breaks away ──
+        if (currentPhase === PHASE.TWINKLE && elapsed >= T_DETACH) {
+            currentPhase = PHASE.DETACH;
+            // Pulse the chosen star (make it brighter briefly)
+            chosenStar.baseAlpha = 1.0;
+            chosenStar.radius = 3.0;
+        }
+
+        if (currentPhase === PHASE.DETACH && elapsed >= T_SHOOT_START) {
+            currentPhase = PHASE.SHOOT;
+            // Start the shooting star
+            chosenStar.active = false; // hide original star
+            shootingStar.active = true;
+
+            // Calculate target (logo center)
+            const target = getLogoCenter();
+            shootingStar.targetX = target.x;
+            shootingStar.targetY = target.y;
+            shootingStar.startX = chosenStar.x;
+            shootingStar.startY = chosenStar.y;
+            shootingStar.progress = 0;
+        }
+
+        // ── Phase: SHOOT — Animate shooting star toward logo ──
+        if (currentPhase === PHASE.SHOOT) {
+            const shootElapsed = elapsed - T_SHOOT_START;
+            const rawProgress = Math.min(shootElapsed / T_SHOOT_DURATION, 1);
+            shootingStar.progress = easeInOutCubic(rawProgress);
+
+            const ss = shootingStar;
+            ss.x = ss.startX + (ss.targetX - ss.startX) * ss.progress;
+            ss.y = ss.startY + (ss.targetY - ss.startY) * ss.progress;
+
+            // Grow radius as it approaches
+            ss.radius = 2.5 + rawProgress * 2.5;
+
+            // Add trail point
+            ss.trail.push({ x: ss.x, y: ss.y });
+            if (ss.trail.length > ss.maxTrailLen) {
+                ss.trail.shift();
+            }
+
+            drawShootingStar();
+
+            // Collision!
+            if (rawProgress >= 1.0) {
+                currentPhase = PHASE.COLLISION;
+                onCollision();
+            }
+        }
+
+        // ── Phase: COLLISION — Burst particles still rendering ──
+        if (currentPhase >= PHASE.COLLISION) {
+            // Update burst particles
+            for (let i = burstParticles.length - 1; i >= 0; i--) {
+                const p = burstParticles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vx *= 0.96;
+                p.vy *= 0.96;
+                p.life -= dt;
+                p.alpha = Math.max(0, p.life / p.maxLife);
+                if (p.life <= 0) burstParticles.splice(i, 1);
+            }
+            drawBurstParticles();
+        }
+
+        animFrameId = requestAnimationFrame(frame);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  COLLISION EVENT
+    // ═══════════════════════════════════════════════════════════
+
+    function onCollision() {
+        const target = getLogoCenter();
+
+        // Hide shooting star
+        shootingStar.active = false;
+        shootingStar.trail = [];
+
+        // Spawn burst particles at impact point
+        spawnBurstParticles(target.x, target.y, 40);
+
+        // ── Dim overlay ──
+        if (dimOverlay) dimOverlay.classList.add('active');
+
+        // ── UI collision dim ──
+        if (appContainer) {
+            appContainer.classList.remove('intro-dimmed');
+            appContainer.classList.add('intro-collision');
+        }
+
+        // ── Logo glow burst ──
+        if (logoIcon) {
+            logoIcon.classList.add('glow-burst');
+        }
+
+        // ── Glow pulse positioned at logo ──
+        if (glowPulse) {
+            glowPulse.style.left = target.x + 'px';
+            glowPulse.style.top = target.y + 'px';
+            glowPulse.classList.add('burst');
+        }
+
+        // ── Reveal phase after 600ms ──
+        setTimeout(onReveal, 600);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  REVEAL EVENT
+    // ═══════════════════════════════════════════════════════════
+
+    function onReveal() {
+        if (destroyed) return;
+        currentPhase = PHASE.REVEAL;
+
+        // Remove dim
+        if (dimOverlay) dimOverlay.classList.remove('active');
+
+        // Logo settle to soft ambient glow
+        if (logoIcon) {
+            logoIcon.classList.remove('glow-burst');
+            logoIcon.classList.add('glow-settle');
+        }
+
+        // UI full reveal
+        if (appContainer) {
+            appContainer.classList.remove('intro-collision');
+            appContainer.classList.add('intro-reveal');
+        }
+
+        // Cleanup after reveal completes
+        setTimeout(() => {
+            if (destroyed) return;
+            currentPhase = PHASE.IDLE;
+
+            // Clean up classes so no lingering styles
+            if (appContainer) {
+                appContainer.classList.remove('intro-reveal');
+                appContainer.style.opacity = '1';
+            }
+            if (logoIcon) {
+                // Keep settle glow — it looks nice as ambient
+            }
+        }, T_REVEAL_DURATION);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  CLEANUP
+    // ═══════════════════════════════════════════════════════════
+
+    function destroy() {
+        destroyed = true;
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+        window.removeEventListener('resize', resize);
+    }
+
+    // Expose cleanup for potential unmount scenarios
+    window.__destroyCinematicStarfield = destroy;
+
+    // ── Kick off ──
+    animFrameId = requestAnimationFrame(frame);
+
+})();
+
+
+/* ═══════════════════════════════════════════════════════════
    TIC TAC TOE — GAME ENGINE
    Multi-screen setup + Simple & Loop modes + AI difficulties
    ═══════════════════════════════════════════════════════════ */
