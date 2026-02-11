@@ -1,18 +1,125 @@
 /* ═══════════════════════════════════════════════════════════
+   CINEMATIC INTRO — Orchestration Controller
+   
+   Minimal JS to coordinate the CSS-driven animation sequence.
+   Handles: spark particles, screen shake trigger, UI reveal
+   classes, and overlay cleanup.
+   ═══════════════════════════════════════════════════════════ */
+
+(function initCinematicIntro() {
+    // Respect user's motion preferences
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const overlay = document.getElementById('intro-overlay');
+        if (overlay) overlay.remove();
+        const app = document.getElementById('app-container');
+        if (app) app.classList.remove('intro-hidden');
+        return;
+    }
+
+    // ── Phase 3: Collision effects at ~1100ms ──
+    // Trigger screen shake + spark particles when shooting star "hits"
+    setTimeout(() => {
+        // Screen shake
+        document.body.classList.add('intro-shake');
+        setTimeout(() => document.body.classList.remove('intro-shake'), 400);
+
+        // Star glow burst
+        const starGlow = document.getElementById('intro-star-glow');
+        if (starGlow) starGlow.classList.add('collision');
+
+        // Star glyph reaction
+        const starGlyph = document.querySelector('.intro-star-glyph');
+        if (starGlyph) starGlyph.classList.add('collision');
+
+        // Spawn spark particles
+        spawnSparks();
+    }, 1100);
+
+    // ── Phase 5: UI Reveal at ~1500ms ──
+    setTimeout(() => {
+        const app = document.getElementById('app-container');
+        if (app) {
+            app.classList.remove('intro-hidden');
+            app.style.opacity = '1';
+            app.style.pointerEvents = 'auto';
+
+            // Add reveal animation classes to UI elements
+            const logoIcon = document.querySelector('.logo-icon');
+            const title = document.querySelector('.main-title');
+            const subtitle = document.querySelector('.subtitle');
+            const cards = document.querySelector('.option-cards');
+
+            if (logoIcon) logoIcon.classList.add('intro-reveal-logo');
+            if (title) title.classList.add('intro-reveal-title');
+            if (subtitle) subtitle.classList.add('intro-reveal-subtitle');
+            if (cards) cards.classList.add('intro-reveal-cards');
+        }
+    }, 1500);
+
+    // ── Cleanup: Remove overlay at ~2300ms ──
+    setTimeout(() => {
+        const overlay = document.getElementById('intro-overlay');
+        if (overlay) {
+            overlay.classList.add('fade-out');
+            // Remove from DOM after fade-out transition
+            setTimeout(() => overlay.remove(), 450);
+        }
+    }, 2300);
+
+    /**
+     * Spawn spark particles that fly outward from center.
+     * Each spark uses CSS custom properties for direction.
+     */
+    function spawnSparks() {
+        const container = document.getElementById('spark-container');
+        if (!container) return;
+
+        const sparkCount = 10;
+        const colors = [
+            'rgba(165, 180, 252, 0.9)',  // light indigo
+            'rgba(224, 231, 255, 0.8)',  // very light indigo
+            'rgba(129, 140, 248, 0.7)',  // medium indigo
+            'rgba(244, 114, 182, 0.6)',  // pink accent
+        ];
+
+        for (let i = 0; i < sparkCount; i++) {
+            const spark = document.createElement('div');
+            spark.classList.add('spark');
+
+            // Random direction outward (full 360°)
+            const angle = (Math.PI * 2 * i) / sparkCount + (Math.random() - 0.5) * 0.6;
+            const distance = 40 + Math.random() * 80;
+            const sx = Math.cos(angle) * distance;
+            const sy = Math.sin(angle) * distance;
+
+            spark.style.setProperty('--sx', sx + 'px');
+            spark.style.setProperty('--sy', sy + 'px');
+            spark.style.background = colors[i % colors.length];
+            spark.style.width = (2 + Math.random() * 2) + 'px';
+            spark.style.height = spark.style.width;
+            spark.style.animation = `sparkFly ${0.3 + Math.random() * 0.3}s ease-out forwards`;
+
+            container.appendChild(spark);
+        }
+    }
+})();
+
+
+/* ═══════════════════════════════════════════════════════════
    TIC TAC TOE — GAME ENGINE
    Multi-screen setup + Simple & Loop modes + AI difficulties
    ═══════════════════════════════════════════════════════════ */
 
 // ─── State Variables ───────────────────────────────────────
-let gameMode       = null;   // 'simple' | 'loop'
-let opponentType   = null;   // 'ai' | 'human'
-let aiDifficulty   = null;   // 'easy' | 'medium' | 'hard'
+let gameMode = null;   // 'simple' | 'loop'
+let opponentType = null;   // 'ai' | 'human'
+let aiDifficulty = null;   // 'easy' | 'medium' | 'hard'
 
-let board          = Array(9).fill('');
-let currentPlayer  = 'X';
-let gameOver       = false;
-let moveHistory    = [];     // For Loop Mode: tracks order of moves
-const MAX_MARKS    = 6;      // Loop Mode: max marks on board (3 per player)
+let board = Array(9).fill('');
+let currentPlayer = 'X';
+let gameOver = false;
+let moveHistory = [];     // For Loop Mode: tracks order of moves
+const MAX_MARKS = 6;      // Loop Mode: max marks on board (3 per player)
 
 // Winning patterns
 const WIN_PATTERNS = [
@@ -23,17 +130,17 @@ const WIN_PATTERNS = [
 
 // ─── DOM References ────────────────────────────────────────
 const screens = {
-    mode:       document.getElementById('screen-mode'),
-    opponent:   document.getElementById('screen-opponent'),
+    mode: document.getElementById('screen-mode'),
+    opponent: document.getElementById('screen-opponent'),
     difficulty: document.getElementById('screen-difficulty'),
-    game:       document.getElementById('screen-game'),
+    game: document.getElementById('screen-game'),
 };
 
-const cells       = document.querySelectorAll('.cell');
-const statusEl    = document.getElementById('game-status');
-const badgeMode   = document.getElementById('badge-mode');
-const badgeOpp    = document.getElementById('badge-opponent');
-const badgeDiff   = document.getElementById('badge-difficulty');
+const cells = document.querySelectorAll('.cell');
+const statusEl = document.getElementById('game-status');
+const badgeMode = document.getElementById('badge-mode');
+const badgeOpp = document.getElementById('badge-opponent');
+const badgeDiff = document.getElementById('badge-difficulty');
 
 // ─── Ambient Particles ────────────────────────────────────
 (function initParticles() {
@@ -137,9 +244,9 @@ function startGame() {
     });
 
     // Set badges
-    const modeLabels  = { simple: '⚡ Simple', loop: '♾️ Loop' };
-    const oppLabels   = { ai: '🤖 vs AI', human: '👥 vs Human' };
-    const diffLabels  = { easy: '🌱 Easy', medium: '⚖️ Medium', hard: '🔥 Hard' };
+    const modeLabels = { simple: '⚡ Simple', loop: '♾️ Loop' };
+    const oppLabels = { ai: '🤖 vs AI', human: '👥 vs Human' };
+    const diffLabels = { easy: '🌱 Easy', medium: '⚖️ Medium', hard: '🔥 Hard' };
 
     setBadge(badgeMode, modeLabels[gameMode]);
     setBadge(badgeOpp, oppLabels[opponentType]);

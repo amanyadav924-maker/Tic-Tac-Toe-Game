@@ -1,21 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A polished, multi-mode Tic-Tac-Toe game with AI opponents of varying difficulty and a unique Loop Mode.">
+    <meta name="description"
+        content="A polished, multi-mode Tic-Tac-Toe game with AI opponents of varying difficulty and a unique Loop Mode.">
     <title>Tic Tac Toe — Play Smart</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--         CINEMATIC INTRO OVERLAY              -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="intro-overlay" class="intro-overlay" aria-hidden="true">
+        <!-- Vignette darkening effect -->
+        <div class="intro-vignette" id="intro-vignette"></div>
+
+        <!-- Center star (collision target) -->
+        <div class="intro-star" id="intro-star">
+            <span class="intro-star-glyph">✦</span>
+            <div class="intro-star-glow" id="intro-star-glow"></div>
+        </div>
+
+        <!-- Shooting star with trail -->
+        <div class="shooting-star" id="shooting-star">
+            <div class="shooting-star-head"></div>
+            <div class="shooting-star-trail"></div>
+        </div>
+
+        <!-- Collision flash -->
+        <div class="collision-flash" id="collision-flash"></div>
+
+        <!-- Spark particles container (populated by JS) -->
+        <div class="spark-container" id="spark-container"></div>
+
+        <!-- Glow wave that expands outward -->
+        <div class="glow-wave" id="glow-wave"></div>
+    </div>
 
     <!-- ═══════════════════════════════════════════ -->
     <!--            SETUP FLOW CONTAINER             -->
     <!-- ═══════════════════════════════════════════ -->
-    <div id="app-container">
+    <div id="app-container" class="intro-hidden">
 
         <!-- ── SCREEN 1: Mode Selection ── -->
         <section id="screen-mode" class="setup-screen active" aria-label="Game Mode Selection">
@@ -44,7 +76,8 @@
         <!-- ── SCREEN 2: Opponent Selection ── -->
         <section id="screen-opponent" class="setup-screen" aria-label="Opponent Selection">
             <div class="screen-inner">
-                <button class="back-btn" id="btn-back-to-mode" onclick="goBack('screen-mode')" aria-label="Go back to mode selection">
+                <button class="back-btn" id="btn-back-to-mode" onclick="goBack('screen-mode')"
+                    aria-label="Go back to mode selection">
                     ← Back
                 </button>
                 <h2 class="screen-title">Choose your opponent</h2>
@@ -67,7 +100,8 @@
         <!-- ── SCREEN 3: AI Difficulty ── -->
         <section id="screen-difficulty" class="setup-screen" aria-label="AI Difficulty Selection">
             <div class="screen-inner">
-                <button class="back-btn" id="btn-back-to-opponent" onclick="goBack('screen-opponent')" aria-label="Go back to opponent selection">
+                <button class="back-btn" id="btn-back-to-opponent" onclick="goBack('screen-opponent')"
+                    aria-label="Go back to opponent selection">
                     ← Back
                 </button>
                 <h2 class="screen-title">Choose difficulty</h2>
@@ -78,7 +112,8 @@
                         <span class="card-title">Easy</span>
                         <span class="card-desc">Random moves. Great for beginners.</span>
                     </button>
-                    <button class="option-card" id="btn-diff-medium" data-value="medium" onclick="selectDifficulty('medium')">
+                    <button class="option-card" id="btn-diff-medium" data-value="medium"
+                        onclick="selectDifficulty('medium')">
                         <span class="card-icon">⚖️</span>
                         <span class="card-title">Medium</span>
                         <span class="card-desc">Mixed logic. A fair challenge.</span>
@@ -136,4 +171,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
