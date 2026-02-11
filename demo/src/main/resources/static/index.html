@@ -16,38 +16,9 @@
 <body>
 
     <!-- ═══════════════════════════════════════════ -->
-    <!--         CINEMATIC INTRO OVERLAY              -->
-    <!-- ═══════════════════════════════════════════ -->
-    <div id="intro-overlay" class="intro-overlay" aria-hidden="true">
-        <!-- Vignette darkening effect -->
-        <div class="intro-vignette" id="intro-vignette"></div>
-
-        <!-- Center star (collision target) -->
-        <div class="intro-star" id="intro-star">
-            <span class="intro-star-glyph">✦</span>
-            <div class="intro-star-glow" id="intro-star-glow"></div>
-        </div>
-
-        <!-- Shooting star with trail -->
-        <div class="shooting-star" id="shooting-star">
-            <div class="shooting-star-head"></div>
-            <div class="shooting-star-trail"></div>
-        </div>
-
-        <!-- Collision flash -->
-        <div class="collision-flash" id="collision-flash"></div>
-
-        <!-- Spark particles container (populated by JS) -->
-        <div class="spark-container" id="spark-container"></div>
-
-        <!-- Glow wave that expands outward -->
-        <div class="glow-wave" id="glow-wave"></div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════ -->
     <!--            SETUP FLOW CONTAINER             -->
     <!-- ═══════════════════════════════════════════ -->
-    <div id="app-container" class="intro-hidden">
+    <div id="app-container">
 
         <!-- ── SCREEN 1: Mode Selection ── -->
         <section id="screen-mode" class="setup-screen active" aria-label="Game Mode Selection">
