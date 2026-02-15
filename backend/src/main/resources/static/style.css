@@ -320,6 +320,31 @@ body::before {
     z-index: 1;
 }
 
+/* ── Unified AI Icon (SVG — identical on all devices) ── */
+.ai-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-bright);
+}
+
+.ai-icon {
+    width: 1.8em;
+    height: 1.8em;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Inline AI icon used inside text (badges, status, result overlay) */
+.ai-icon-inline {
+    width: 1.1em;
+    height: 1.1em;
+    display: inline-block;
+    vertical-align: -0.15em;
+    flex-shrink: 0;
+    color: var(--accent-bright);
+}
+
 /* ═══════════════════════════════════════════════
               GAME SCREEN
    ═══════════════════════════════════════════════ */
@@ -623,7 +648,17 @@ body::before {
 .result-emoji {
     font-size: 3.5rem;
     margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* AI icon in result overlay — sized to match result-emoji */
+.ai-icon-result {
+    width: 3.5rem;
+    height: 3.5rem;
     display: block;
+    color: var(--accent-bright);
 }
 
 .result-text {

@@ -448,6 +448,23 @@
    Multi-screen setup + Simple & Loop modes + AI difficulties
    ═══════════════════════════════════════════════════════════ */
 
+// ─── Unified AI Icon SVG (renders identically on all devices) ──
+function aiIconSVG(cls) {
+    const c = cls || 'ai-icon-inline';
+    return '<svg class="' + c + '" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<rect x="12" y="18" width="40" height="32" rx="8" fill="currentColor" opacity="0.15" stroke="currentColor" stroke-width="2.5"/>' +
+        '<circle cx="26" cy="32" r="5" fill="currentColor" opacity="0.9"/>' +
+        '<circle cx="38" cy="32" r="5" fill="currentColor" opacity="0.9"/>' +
+        '<rect x="24" y="42" width="16" height="3" rx="1.5" fill="currentColor" opacity="0.7"/>' +
+        '<line x1="32" y1="8" x2="32" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<circle cx="32" cy="6" r="3" fill="currentColor" opacity="0.8"/>' +
+        '<line x1="6" y1="28" x2="12" y2="32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<line x1="6" y1="38" x2="12" y2="34" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<line x1="58" y1="28" x2="52" y2="32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<line x1="58" y1="38" x2="52" y2="34" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+        '</svg>';
+}
+
 // ─── State Variables ───────────────────────────────────────
 let gameMode = null;   // 'simple' | 'loop'
 let opponentType = null;   // 'ai' | 'human'
@@ -583,7 +600,7 @@ function startGame() {
 
     // Set badges
     const modeLabels = { simple: '⚡ Simple', loop: '♾️ Loop' };
-    const oppLabels = { ai: '🤖 vs AI', human: '👥 vs Human' };
+    const oppLabels = { ai: aiIconSVG() + ' vs AI', human: '👥 vs Human' };
     const diffLabels = { easy: '🌱 Easy', medium: '⚖️ Medium', hard: '🔥 Hard' };
 
     setBadge(badgeMode, modeLabels[gameMode]);
@@ -610,13 +627,17 @@ function startGame() {
     });
 }
 
-function setBadge(el, text) {
-    el.textContent = text;
+function setBadge(el, content) {
+    el.innerHTML = content;
     el.classList.add('visible');
 }
 
 function updateStatus(text) {
     statusEl.textContent = text;
+}
+
+function updateStatusHTML(html) {
+    statusEl.innerHTML = html;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -639,7 +660,7 @@ function handleCellClick(index) {
 
     if (opponentType === 'ai') {
         // AI's turn
-        updateStatus('AI is thinking 🤖');
+        updateStatusHTML('AI is thinking ' + aiIconSVG());
         statusEl.classList.add('thinking');
         disableCells(true);
 
@@ -718,13 +739,13 @@ function checkGameEnd() {
 
         let msg;
         if (opponentType === 'ai') {
-            msg = currentPlayer === 'X' ? 'You Win! 🎉' : 'AI Wins! 🤖';
+            msg = currentPlayer === 'X' ? 'You Win! 🎉' : 'AI Wins! ' + aiIconSVG();
         } else {
             msg = `Player ${currentPlayer} Wins! 🎉`;
         }
-        updateStatus(msg);
+        updateStatusHTML(msg);
         statusEl.classList.add('win');
-        showResultOverlay(currentPlayer === 'X' ? '🎉' : (opponentType === 'ai' ? '🤖' : '🎉'), msg);
+        showResultOverlay(currentPlayer === 'X' ? '🎉' : (opponentType === 'ai' ? aiIconSVG('ai-icon ai-icon-result') : '🎉'), msg);
         return true;
     }
 
