@@ -51,6 +51,9 @@
 - Docker (multi-stage build)
 - Render (PaaS deployment).
 
+### Architecture
+<img width="1536" height="1024" alt="Tic-Tac-Toe Architecture" src="https://github.com/user-attachments/assets/6e82ce2b-72ba-4c53-bbe6-93a0a02c4b46" />
+
 ## Screenshots
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/79edc93d-7a4c-4775-8e87-ca56c562c612" />
 
